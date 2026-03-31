@@ -1,0 +1,31 @@
+from langchain_core.prompts import PromptTemplate
+from langchain_groq import ChatGroq
+from dotenv import load_dotenv
+import os
+from market_data import get_market_data
+from langchain_core.output_parsers import JsonOutputParser
+load_dotenv()
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    api_key=os.getenv("GROQ_API_KEY")
+)
+template = PromptTemplate(
+    input_variables=["data"],
+    template="""You are an expert options trading advisor.
+Analyze this market data and suggest the best options strategy.
+Explain the rationale, risk and potential profit clearly.
+Return your response as valid JSON with keys: strategy, rationale, risk, potential_profit.
+Market Data: {data}"""
+)
+
+
+def analyze_market(data) :
+  parser = JsonOutputParser()
+  chain = template | llm | parser
+
+  response = chain.invoke({"data": data})
+  
+  return response
+
+data = get_market_data()
+print(analyze_market(data))
